@@ -1,8 +1,9 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import styled, {css} from 'styled-components';
 import {SelectableTile} from "../Shared/Tile";
 import {CoinHeaderGridStyled} from "../Settings/CoinHeaderGrid";
-import {fontSize3, fontSizeBig} from "../Shared/Styles";
+import {fontSize3, fontSizeBig, greenBoxShadow} from "../Shared/Styles";
+import {AppContext} from "../App/AppProvider";
 
 
 const JustifiedRight = styled.div`
@@ -33,6 +34,11 @@ const PriceTileStyled = styled(SelectableTile)`
         grid-template-columns: repeat(3, 1fr);
         justified-items: right;
     `}
+    
+    ${props => props.favorite && css`
+        ${greenBoxShadow}
+        pointer-event: none;
+    `}
 `;
 
 const numberFormatter = number => {
@@ -43,16 +49,16 @@ function ChangePercent({data}) {
     return (
         <JustifiedRight>
             <ChangePct red={data.CHANGEPCT24HOUR < 0}>
-                {numberFormatter(data.CHANGEPCT24HOUR)}
+                {numberFormatter(data.CHANGEPCT24HOUR)}%
             </ChangePct>
         </JustifiedRight>
     );
 }
 
 
-function PriceTileCompact({sym, data}){
+function PriceTileCompact({sym, data, favorite, setCurrentFavorite}){
     return (
-        <PriceTileStyled compact>
+        <PriceTileStyled compact favorite={favorite} onClick={setCurrentFavorite}>
             <JustifiedLeft>{sym}</JustifiedLeft>
             <ChangePercent data={data} />
             <TickerPrice>
@@ -62,9 +68,9 @@ function PriceTileCompact({sym, data}){
     );
 }
 
-function PriceTile({sym, data}) {
+function PriceTile({sym, data, favorite, setCurrentFavorite}) {
     return (
-        <PriceTileStyled>
+        <PriceTileStyled favorite={favorite} onClick={setCurrentFavorite}>
             <CoinHeaderGridStyled>
                 <div>{sym}</div>
                 <ChangePercent data={data} />
@@ -77,10 +83,15 @@ function PriceTile({sym, data}) {
 }
 
 export default function ({price, index}) {
+    let {currentFavorite, setCurrentFavorite} = useContext(AppContext);
     let sym = Object.keys(price)[0];
     let data = price[sym]['USD'];
     let TileClass = index < 5 ? PriceTile : PriceTileCompact;
     return (
-        <TileClass sym={sym} data={data} />
+        <TileClass
+            setCurrentFavorite={() => setCurrentFavorite(sym)}
+            favorite={currentFavorite === sym}
+            sym={sym}
+            data={data} />
     );
 }
